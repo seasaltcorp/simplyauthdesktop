@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Rótulos de campos -->
+    <string name="ssn_label">CPF</string>
+    <string name="ein_label">CNPJ</string>
+    <string name="legal_name_label">Razão Social</string>
+    <string name="trade_name_label">Nome Fantasia</string>
+
+    <!-- Tipos de estabelecimento -->
+    <string name="establishment_type_clinic">Clínica</string>
+    <string name="establishment_type_gym">Academia</string>
+    <string name="establishment_type_studio">Estúdio</string>
+    <string name="establishment_type_spa">Spa</string>
+
+    <!-- Permissões / Papéis -->
+    <string name="role_owner">Proprietário</string>
+    <string name="role_admin">Administrador</string>
+    <string name="role_staff">Funcionário</string>
+
+    <!-- Mensagens comuns -->
+    <string name="save">Salvar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="delete">Excluir</string>
+    <string name="edit">Editar</string>
+
+</resources>

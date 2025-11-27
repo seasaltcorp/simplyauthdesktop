@@ -1,0 +1,69 @@
+-- AppDatabase.sq
+import kotlin.Boolean;
+import kotlin.Int;
+import kotlin.Long;
+import kotlin.String;
+
+
+-- TABLE: USUÁRIO
+CREATE TABLE IF NOT EXISTS User (
+    id TEXT PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    phone TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
+    is_active INTEGER NOT NULL DEFAULT 1,
+    is_verified INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+    updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+);
+
+-- ÍNDICES
+CREATE INDEX IF NOT EXISTS idx_user_email ON User(email);
+CREATE INDEX IF NOT EXISTS idx_user_phone ON User(phone);
+
+-- ========================================
+-- QUERIES: USER
+-- ========================================
+
+-- Insert user
+insertUser:
+INSERT INTO User(
+    id, name, email, phone, password_hash
+) VALUES (?, ?, ?, ?, ?);
+
+-- Find by email
+selectByEmail:
+SELECT * FROM User WHERE email = ? LIMIT 1;
+
+-- Find by phone
+selectByPhone:
+SELECT * FROM User WHERE phone = ? LIMIT 1;
+
+-- Find by ID
+selectById:
+SELECT * FROM User WHERE id = ? LIMIT 1;
+
+-- Update password
+updatePassword:
+UPDATE User SET password_hash = ?, updated_at = strftime('%s', 'now') WHERE id = ?;
+
+-- Deactivate user
+deactivateUser:
+UPDATE User SET is_active = 0, updated_at = strftime('%s', 'now') WHERE id = ?;
+
+-- Activate user
+activateUser:
+UPDATE User SET is_active = 1, updated_at = strftime('%s', 'now') WHERE id = ?;
+
+-- Unverify user
+unverifyUser:
+UPDATE User SET is_verified = 0, updated_at = strftime('%s', 'now') WHERE id = ?;
+
+-- Verify user
+verifyUser:
+UPDATE User SET is_verified = 1, updated_at = strftime('%s', 'now') WHERE id = ?;
+
+-- Is fisrt user
+isFirstUser:
+SELECT COUNT(*) FROM User;

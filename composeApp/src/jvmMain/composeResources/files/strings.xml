@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Field labels -->
+    <string name="ssn_label">SSN</string>
+    <string name="ein_label">EIN</string>
+    <string name="legal_name_label">Legal Name</string>
+    <string name="trade_name_label">Trade Name</string>
+
+    <!-- Establishment types -->
+    <string name="establishment_type_clinic">Clinic</string>
+    <string name="establishment_type_gym">Gym</string>
+    <string name="establishment_type_studio">Studio</string>
+    <string name="establishment_type_spa">Spa</string>
+
+    <!-- Roles -->
+    <string name="role_owner">Owner</string>
+    <string name="role_admin">Admin</string>
+    <string name="role_staff">Staff</string>
+
+    <!-- Common actions -->
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+
+</resources>
