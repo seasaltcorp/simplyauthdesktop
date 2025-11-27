@@ -76,7 +76,6 @@ compose.desktop {
 
 compose.resources {
     publicResClass = true
-    packageOfResClass = "simplyauthdesktop.composeapp.generated.resources"
+    packageOfResClass = "br.com.simplyauthdesktop.resources"
     generateResClass = always
-    packageOfResClass = "simplyauthdesktop.composeapp"
 }
