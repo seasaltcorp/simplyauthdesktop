@@ -1,27 +1,22 @@
-name: Publish to GitHub Packages (Private)
+name: Publicar SimplyAuthDesktop no GitHub Packages (sem tocar no projeto)
 
-# Aciona quando cria uma release ou uma tag vX.Y.Z
 on:
-  release:
-    types: [published]
   push:
     tags:
       - "v*.*.*"
-  workflow_dispatch:      # permite rodar manualmente no GitHub
+  workflow_dispatch:
 
 permissions:
-  contents: read         # para checkout
-  packages: write        # para publicar no GitHub Packages
-  id-token: write        # OIDC (não precisa de PAT)
+  contents: read
+  packages: write
+  id-token: write
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout do código
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup JDK 21
         uses: actions/setup-java@v4
@@ -32,27 +27,84 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # IMPORTA A CHAVE GPG PRIVADA (sem senha)
-      - name: Import GPG Signing Key (sem passphrase)
+      - name: Extrair versão da tag
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+
+      - name: Gerar JAR
+        run: ./gradlew :composeApp:jar -Pversion=${{ env.VERSION }}
+
+      - name: Renomear JAR
+        run: |
+          cp composeApp/build/libs/composeApp-${{ env.VERSION }}.jar simplyauthdesktop-${{ env.VERSION }}.jar
+
+      - name: Importar chave GPG (sem senha)
         env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
-        run: |
-          echo "$SIGNING_KEY" | gpg --batch --import
+        run: echo "$SIGNING_KEY" | gpg --batch --import
 
-      # PUBLICAÇÃO
-      - name: Publish to GitHub Packages
+      - name: Assinar JAR
         env:
-          # O GITHUB_TOKEN é injetado automaticamente com permissão de packages:write
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
         run: |
-          ./gradlew publishAllPublicationsToGitHubPackagesRepository \
-            -Psigning.keyId=$SIGNING_KEY_ID \
-            -Psigning.secretKeyRingFile=$(gpg --list-secret-keys --keyid-format LONG | grep sec | awk '{print $2}' | cut -d/ -f2 | head -n1 | xargs -I {} echo ~/.gnupg/secring.gpg) \
-            --no-daemon \
-            --stacktrace
+          gpg --batch --yes --armor --detach-sign \
+              --local-user ${{ secrets.SIGNING_KEY_ID }} \
+              simplyauthdesktop-${{ env.VERSION }}.jar
 
-      - name: Sucesso!
+      # ← POM em arquivo separado (evita erro do editor web)
+      - name: Criar POM temporário
         run: |
-          echo "✅ SimplyAuthDesktop publicado com sucesso no GitHub Packages!"
-          echo "🔗 https://github.com/orgs/seasaltstudio/packages?repo_name=simplyauthdesktop"
+          cat > pom.xml << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <project xmlns="http://maven.apache.org/POM/4.0.0"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                                       https://maven.apache.org/xsd/maven-4.0.0.xsd">
+            <modelVersion>4.0.0</modelVersion>
+            <groupId>br.com.simplyauthdesktop</groupId>
+            <artifactId>simplyauthdesktop</artifactId>
+            <version>${{ env.VERSION }}</version>
+            <packaging>jar</packaging>
+            <name>SimplyAuthDesktop</name>
+            <description>Sistema de autenticação local-first para Desktop (KMP + Compose)</description>
+            <url>https://github.com/seasaltstudio/simplyauthdesktop</url>
+            <licenses>
+              <license>
+                <name>MIT License</name>
+                <url>https://opensource.org/licenses/MIT</url>
+              </license>
+            </licenses>
+            <developers>
+              <developer>
+                <id>salomaoneto</id>
+                <name>Salomão Neto</name>
+              </developer>
+            </developers>
+          </project>
+          EOF
+
+      - name: Publicar JAR no GitHub Packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mvn deploy:deploy-file \
+            -Dfile=simplyauthdesktop-${{ env.VERSION }}.jar \
+            -DpomFile=pom.xml \
+            -DrepositoryId=github \
+            -Durl=https://maven.pkg.github.com/seasaltstudio/simplyauthdesktop
+
+      - name: Publicar assinatura .asc
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mvn deploy:deploy-file \
+            -Dfile=simplyauthdesktop-${{ env.VERSION }}.jar.asc \
+            -Dclassifier= \
+            -Dpackaging=asc \
+            -DrepositoryId=github \
+            -Durl=https://maven.pkg.github.com/seasaltstudio/simplyauthdesktop \
+            -DgeneratePom=false
+
+      - name: Finalizado!
+        run: |
+          echo "SimplyAuthDesktop ${{ env.VERSION }} publicado com sucesso!"
+          echo "Use: implementation(\"br.com.simplyauthdesktop:simplyauthdesktop:${{ env.VERSION }}\")"
