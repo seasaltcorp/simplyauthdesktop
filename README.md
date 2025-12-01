@@ -1,7 +1,7 @@
 # SimplyAuth Desktop
 
 <div>
-  <img src="https://github.com/salomaoface/simplyauthdesktop/blob/main/assets/logo.jpg?raw=true" width="180" alt="SimplyAuth Logo"/>
+  <img src="https://github.com/seasaltcorp/simplyauthdesktop/blob/main/assets/logo.jpg?raw=true" width="180" alt="SimplyAuth Logo"/>
   <h1>Beautiful, Secure, Offline-First Authentication for Compose Desktop</h1>
 
   <p>
@@ -9,13 +9,13 @@
   </p>
 
   <p>
-    <a href="https://github.com/salomaoface/simplyauthdesktop/stargazers">
+    <a href="https://github.com/seasaltcorp/simplyauthdesktop/stargazers">
       <img src="https://img.shields.io/github/stars/salomaoface/simplyauthdesktop?style=for-the-badge&color=ff79c6" alt="GitHub stars"/>
     </a>
-    <a href="https://github.com/salomaoface/simplyauthdesktop/releases">
+    <a href="https://github.com/seasaltcorp/simplyauthdesktop/releases">
       <img src="https://img.shields.io/github/v/release/salomaoface/simplyauthdesktop?style=for-the-badge&color=8b5cf6" alt="GitHub Release"/>
     </a>
-    <a href="https://github.com/salomaoface/simplyauthdesktop/blob/main/LICENSE">
+    <a href="https://github.com/seasaltcorp/simplyauthdesktop/blob/main/LICENSE">
       <img src="https://img.shields.io/github/license/salomaoface/simplyauthdesktop?style=for-the-badge&color=6ee7b7" alt="License"/>
     </a>
     <a href="https://central.sonatype.com/search?q=br.com.simply">
@@ -25,7 +25,7 @@
 
 [//]: # (  <br/>)
 
-[//]: # (  <img src="https://github.com/salomaoface/simplyauthdesktop/blob/main/assets/demo.gif?raw=true" alt="SimplyAuth Desktop in action" width="100%"/>)
+[//]: # (  <img src="https://github.com/seasaltcorp/simplyauthdesktop/blob/main/assets/demo.gif?raw=true" alt="SimplyAuth Desktop in action" width="100%"/>)
 
 [//]: # (  <br/><br/>)
 
@@ -41,13 +41,27 @@
 | "Users want dark mode"                       | Built-in dark/light toggle with sun/moon icon          |
 | "I just want to ship"                        | Add in 5 lines of code                                 |
 
-## Installation
+## Installation (GitHub Packages – 1.0.0 version published)
 
 ```kotlin
 // build.gradle.kts (Compose Desktop project)
+
+dependencyResolutionManagement {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/seasaltcorp/simplyauthdesktop")
+            credentials {
+                username = "seasaltcorp" // ou seu GitHub username
+                password = System.getenv("GITHUB_PAT") // seu token fine-grained
+            }
+        }
+        mavenCentral()
+    }
+}
+
 dependencies {
-    implementation("br.com.simply:simplyauthdesktop-compose:1.0.0")
-    implementation("br.com.simply:simplyauthdesktop-sqldelight:1.0.0") // optional – bring your own DB if you want
+    implementation("br.com.simplyauthdesktop:simplyauthdesktop:1.0.0")
 }
 ```
 
@@ -55,8 +69,7 @@ dependencies {
 
 ````kotlin
 fun main() = application {
-    startKoin { modules(appModule) } // included in the library
-
+    startKoin { modules(appModule) } // incluso na biblioteca
     var isDark by remember { mutableStateOf(false) }
 
     Window(onCloseRequest = ::exitApplication, title = "My Awesome App") {
@@ -65,14 +78,40 @@ fun main() = application {
                 isDarkTheme = isDark,
                 onThemeToggle = { isDark = !isDark },
                 onAuthSuccess = { user ->
-                    // Your main app starts here!
-                    MyMainScreen(user)
+                    MyMainScreen(user) // aqui começa seu app!
                 }
             )
         }
     }
 }
 ````
+
+### Required Token (to download the private package)
+
+1. Go to: https://github.com/settings/tokens  
+2. Click **Fine-grained tokens** → **Generate new token** → **Generate new token (fine-grained)**  
+3. Fill in the form as follows:
+
+   - **Token name**: `simplyauthdesktop-read` (or any name you like)  
+   - **Expiration**: 90 days or No expiration  
+   - **Repository access**: **Only select repositories** → select `seasaltstudio/simplyauthdesktop`  
+   - **Permissions** → **Packages** → check **Read packages**
+
+4. Click **Generate token**  
+5. Copy the generated token (it starts with `github_pat_...`)
+
+6. Use it in the consuming project (e.g. SimplySched, SimplyFinance, etc.):
+
+```bash
+# Linux / macOS
+export GITHUB_PAT=github_pat_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+# Windows PowerShell
+$env:GITHUB_PAT="github_pat_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+
+# Windows CMD
+set GITHUB_PAT=github_pat_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+```
 
 #### That’s it — full authentication, beautiful UI, secure storage, theme toggle — all working out of the box.
 
