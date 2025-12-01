@@ -30,20 +30,28 @@ jobs:
       - name: Extrair versão da tag
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
 
-      # TASK CORRETA — UBER JAR (com tudo dentro)
-      - name: Gerar Uber JAR (recomendado)
+      - name: Gerar Uber JAR
         run: ./gradlew :composeApp:packageUberJarForCurrentOS
 
-      - name: Renomear JAR para padrão Maven
+      # ← LINHA CORRIGIDA: pega qualquer JAR dentro da pasta jars/
+      - name: Localizar e renomear o JAR
         run: |
-          cp composeApp/build/distributions/*.jar simplyauthdesktop-${{ env.VERSION }}.jar
+          JAR_PATH=$(find composeApp/build/compose/jars -name "*.jar" | head -n 1)
+          if [ -z "$JAR_PATH" ]; then
+            echo "ERRO: JAR não encontrado em composeApp/build/compose/jars/"
+            exit 1
+          fi
+          echo "JAR encontrado: $JAR_PATH"
+          cp "$JAR_PATH" simplyauthdesktop-${{ env.VERSION }}.jar
+          echo "JAR renomeado para: simplyauthdesktop-${{ env.VERSION }}.jar"
+          ls -la simplyauthdesktop-${{ env.VERSION }}.jar
 
-      - name: Importar chave GPG (sem senha)
+      - name: Importar chave GPG
         env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
         run: echo "$SIGNING_KEY" | gpg --batch --import
 
-      - name: Assinar JAR com GPG
+      - name: Assinar JAR
         env:
           SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
         run: |
@@ -51,7 +59,7 @@ jobs:
               --local-user ${{ secrets.SIGNING_KEY_ID }} \
               simplyauthdesktop-${{ env.VERSION }}.jar
 
-      - name: Criar POM temporário
+      - name: Criar POM
         run: |
           cat > pom.xml << 'EOF'
           <?xml version="1.0" encoding="UTF-8"?>
@@ -73,12 +81,6 @@ jobs:
                 <url>https://opensource.org/licenses/MIT</url>
               </license>
             </licenses>
-            <developers>
-              <developer>
-                <id>salomaoneto</id>
-                <name>Salomão Neto</name>
-              </developer>
-            </developers>
           </project>
           EOF
 
@@ -104,6 +106,4 @@ jobs:
             -DgeneratePom=false
 
       - name: Sucesso!
-        run: |
-          echo "SimplyAuthDesktop ${{ env.VERSION }} publicado com sucesso!"
-          echo "Use: implementation(\"br.com.simplyauthdesktop:simplyauthdesktop:${{ env.VERSION }}\")"
+        run: echo "SimplyAuthDesktop ${{ env.VERSION }} publicado com sucesso!"
