@@ -33,18 +33,12 @@ jobs:
       - name: Gerar Uber JAR
         run: ./gradlew :composeApp:packageUberJarForCurrentOS
 
-      # ← LINHA CORRIGIDA: pega qualquer JAR dentro da pasta jars/
       - name: Localizar e renomear o JAR
         run: |
           JAR_PATH=$(find composeApp/build/compose/jars -name "*.jar" | head -n 1)
-          if [ -z "$JAR_PATH" ]; then
-            echo "ERRO: JAR não encontrado em composeApp/build/compose/jars/"
-            exit 1
-          fi
-          echo "JAR encontrado: $JAR_PATH"
+          if [ -z "$JAR_PATH" ]; then echo "ERRO: JAR não encontrado!"; exit 1; fi
           cp "$JAR_PATH" simplyauthdesktop-${{ env.VERSION }}.jar
-          echo "JAR renomeado para: simplyauthdesktop-${{ env.VERSION }}.jar"
-          ls -la simplyauthdesktop-${{ env.VERSION }}.jar
+          echo "JAR copiado: $(ls -lh simplyauthdesktop-${{ env.VERSION }}.jar)"
 
       - name: Importar chave GPG
         env:
@@ -84,9 +78,23 @@ jobs:
           </project>
           EOF
 
+      # ← A LINHA QUE FALTAVA (autenticação Maven)
+      - name: Configurar autenticação Maven para GitHub Packages
+        run: |
+          mkdir -p ~/.m2
+          cat > ~/.m2/settings.xml << 'EOF'
+          <settings>
+            <servers>
+              <server>
+                <id>github</id>
+                <username>${{ github.actor }}</username>
+                <password>${{ secrets.GITHUB_TOKEN }}</password>
+              </server>
+            </servers>
+          </settings>
+          EOF
+
       - name: Publicar JAR
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mvn deploy:deploy-file \
             -Dfile=simplyauthdesktop-${{ env.VERSION }}.jar \
@@ -95,8 +103,6 @@ jobs:
             -Durl=https://maven.pkg.github.com/seasaltstudio/simplyauthdesktop
 
       - name: Publicar assinatura .asc
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mvn deploy:deploy-file \
             -Dfile=simplyauthdesktop-${{ env.VERSION }}.jar.asc \
