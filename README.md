@@ -65,27 +65,6 @@ dependencies {
 }
 ```
 
-## Usage – Just 5 lines in main.kt
-
-````kotlin
-fun main() = application {
-    startKoin { modules(appModule) } // incluso na biblioteca
-    var isDark by remember { mutableStateOf(false) }
-
-    Window(onCloseRequest = ::exitApplication, title = "My Awesome App") {
-        AppTheme(useDarkTheme = isDark) {
-            AuthNavigation(
-                isDarkTheme = isDark,
-                onThemeToggle = { isDark = !isDark },
-                onAuthSuccess = { user ->
-                    MyMainScreen(user) // aqui começa seu app!
-                }
-            )
-        }
-    }
-}
-````
-
 ### Required Token (to download the private package)
 
 1. Go to: https://github.com/settings/tokens  
@@ -112,6 +91,53 @@ $env:GITHUB_PAT="github_pat_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 # Windows CMD
 set GITHUB_PAT=github_pat_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 ```
+## Installation Option 2 – Super simple: Download the standalone JAR (no token needed)
+
+Perfect for:
+- Quick prototypes
+- Offline environments
+- Onboarding new developers
+- Avoiding GitHub Packages setup
+
+**Steps:**
+
+1. Go to the latest release  
+   → https://github.com/seasaltstudio/simplyauthdesktop/releases/latest
+
+2. Download the file:  
+   `simplyauthdesktop-<version>.jar` (from Assets)
+
+3. Place the JAR in your project (recommended: create a `libs/` folder in the root)
+
+4. Add this single line to your `build.gradle.kts` (composeApp module or root):
+
+```kotlin
+dependencies {
+    implementation(files("libs/simplyauthdesktop-1.0.0.jar"))
+    // or if you prefer relative path from composeApp:
+    // implementation(files("../libs/simplyauthdesktop-1.0.0.jar"))
+}
+```
+## Usage – Just 5 lines in main.kt
+
+````kotlin
+fun main() = application {
+    startKoin { modules(appModule) } // incluso na biblioteca
+    var isDark by remember { mutableStateOf(false) }
+
+    Window(onCloseRequest = ::exitApplication, title = "My Awesome App") {
+        AppTheme(useDarkTheme = isDark) {
+            AuthNavigation(
+                isDarkTheme = isDark,
+                onThemeToggle = { isDark = !isDark },
+                onAuthSuccess = { user ->
+                    MyMainScreen(user) // aqui começa seu app!
+                }
+            )
+        }
+    }
+}
+````
 
 #### That’s it — full authentication, beautiful UI, secure storage, theme toggle — all working out of the box.
 
