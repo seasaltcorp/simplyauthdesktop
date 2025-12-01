@@ -1,4 +1,4 @@
-name: Publicar SimplyAuthDesktop no GitHub Packages (sem tocar no projeto)
+name: Publicar SimplyAuthDesktop no GitHub Packages
 
 on:
   push:
@@ -30,19 +30,20 @@ jobs:
       - name: Extrair versão da tag
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
 
-      - name: Gerar JAR
-        run: ./gradlew :composeApp:jar -Pversion=${{ env.VERSION }}
+      # TASK CORRETA — UBER JAR (com tudo dentro)
+      - name: Gerar Uber JAR (recomendado)
+        run: ./gradlew :composeApp:packageUberJarForCurrentOS
 
-      - name: Renomear JAR
+      - name: Renomear JAR para padrão Maven
         run: |
-          cp composeApp/build/libs/composeApp-${{ env.VERSION }}.jar simplyauthdesktop-${{ env.VERSION }}.jar
+          cp composeApp/build/distributions/*.jar simplyauthdesktop-${{ env.VERSION }}.jar
 
       - name: Importar chave GPG (sem senha)
         env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
         run: echo "$SIGNING_KEY" | gpg --batch --import
 
-      - name: Assinar JAR
+      - name: Assinar JAR com GPG
         env:
           SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
         run: |
@@ -50,7 +51,6 @@ jobs:
               --local-user ${{ secrets.SIGNING_KEY_ID }} \
               simplyauthdesktop-${{ env.VERSION }}.jar
 
-      # ← POM em arquivo separado (evita erro do editor web)
       - name: Criar POM temporário
         run: |
           cat > pom.xml << 'EOF'
@@ -82,7 +82,7 @@ jobs:
           </project>
           EOF
 
-      - name: Publicar JAR no GitHub Packages
+      - name: Publicar JAR
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -98,13 +98,12 @@ jobs:
         run: |
           mvn deploy:deploy-file \
             -Dfile=simplyauthdesktop-${{ env.VERSION }}.jar.asc \
-            -Dclassifier= \
             -Dpackaging=asc \
             -DrepositoryId=github \
             -Durl=https://maven.pkg.github.com/seasaltstudio/simplyauthdesktop \
             -DgeneratePom=false
 
-      - name: Finalizado!
+      - name: Sucesso!
         run: |
           echo "SimplyAuthDesktop ${{ env.VERSION }} publicado com sucesso!"
           echo "Use: implementation(\"br.com.simplyauthdesktop:simplyauthdesktop:${{ env.VERSION }}\")"
